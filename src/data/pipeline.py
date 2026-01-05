@@ -1,10 +1,10 @@
 import json
 from pathlib import Path
-from data_explorer import FMADataExplorer
-from data_cleaner import AudioDataCleaner, MetadataCleaner
-from data_analyzer import ClassBalanceAnalyzer
-from data_augmenter import AudioAugmenter, DatasetAugmenter
-from data_splitter import DatasetSplitter
+from .data_explorer import FMADataExplorer
+from .data_cleaner import AudioDataCleaner, MetadataCleaner
+from .data_analyzer import ClassBalanceAnalyzer
+from .data_augmenter import AudioAugmenter, DatasetAugmenter
+from .data_splitter import DatasetSplitter
 
 
 class DataPreparationPipeline:
@@ -88,8 +88,18 @@ class DataPreparationPipeline:
         print("\nData preparation pipeline completed!")
 
     def _save_json(self, data: dict, filename: str) -> None:
+        def convert_to_serializable(obj):
+            if hasattr(obj, 'item'):
+                return obj.item()
+            if isinstance(obj, dict):
+                return {k: convert_to_serializable(v) for k, v in obj.items()}
+            if isinstance(obj, list):
+                return [convert_to_serializable(item) for item in obj]
+            return obj
+
+        serializable_data = convert_to_serializable(data)
         with open(self.output_dir / filename, 'w') as f:
-            json.dump(data, f, indent=2)
+            json.dump(serializable_data, f, indent=2)
 
 
 if __name__ == "__main__":
