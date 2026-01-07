@@ -1,0 +1,105 @@
+{
+  "Blues": {
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1-score": 0.0,
+    "support": 6.0
+  },
+  "Classical": {
+    "precision": 1.0,
+    "recall": 0.02631578947368421,
+    "f1-score": 0.05128205128205128,
+    "support": 76.0
+  },
+  "Country": {
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1-score": 0.0,
+    "support": 22.0
+  },
+  "Easy Listening": {
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1-score": 0.0,
+    "support": 2.0
+  },
+  "Electronic": {
+    "precision": 0.779874213836478,
+    "recall": 0.42105263157894735,
+    "f1-score": 0.5468577728776185,
+    "support": 589.0
+  },
+  "Experimental": {
+    "precision": 0.1870967741935484,
+    "recall": 0.3972602739726027,
+    "f1-score": 0.2543859649122807,
+    "support": 73.0
+  },
+  "Folk": {
+    "precision": 0.3333333333333333,
+    "recall": 0.0625,
+    "f1-score": 0.10526315789473684,
+    "support": 32.0
+  },
+  "Hip-Hop": {
+    "precision": 0.3961352657004831,
+    "recall": 0.5324675324675324,
+    "f1-score": 0.45429362880886426,
+    "support": 154.0
+  },
+  "Instrumental": {
+    "precision": 0.11904761904761904,
+    "recall": 0.2702702702702703,
+    "f1-score": 0.1652892561983471,
+    "support": 37.0
+  },
+  "Jazz": {
+    "precision": 0.2,
+    "recall": 0.1891891891891892,
+    "f1-score": 0.19444444444444445,
+    "support": 37.0
+  },
+  "Old-Time / Historic": {
+    "precision": 0.8888888888888888,
+    "recall": 0.5714285714285714,
+    "f1-score": 0.6956521739130435,
+    "support": 14.0
+  },
+  "Pop": {
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1-score": 0.0,
+    "support": 10.0
+  },
+  "Rock": {
+    "precision": 0.717741935483871,
+    "recall": 0.839622641509434,
+    "f1-score": 0.7739130434782608,
+    "support": 636.0
+  },
+  "Soul-RnB": {
+    "precision": 0.06172839506172839,
+    "recall": 0.3125,
+    "f1-score": 0.10309278350515463,
+    "support": 16.0
+  },
+  "Spoken": {
+    "precision": 0.25806451612903225,
+    "recall": 0.8,
+    "f1-score": 0.3902439024390244,
+    "support": 10.0
+  },
+  "accuracy": 0.5455075845974329,
+  "macro avg": {
+    "precision": 0.3294607294449988,
+    "recall": 0.2948404599926821,
+    "f1-score": 0.24898121198358844,
+    "support": 1714.0
+  },
+  "weighted avg": {
+    "precision": 0.644677275874902,
+    "recall": 0.5455075845974329,
+    "f1-score": 0.5476699976787391,
+    "support": 1714.0
+  }
+}
