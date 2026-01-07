@@ -1,0 +1,21 @@
+                     precision    recall  f1-score   support
+
+              Blues       0.00      0.00      0.00         6
+          Classical       1.00      0.67      0.80        76
+            Country       0.27      0.55      0.36        22
+     Easy Listening       0.00      0.00      0.00         2
+         Electronic       0.79      0.74      0.77       589
+       Experimental       0.28      0.36      0.32        73
+               Folk       0.56      0.31      0.40        32
+            Hip-Hop       0.69      0.74      0.71       154
+       Instrumental       0.20      0.54      0.29        37
+               Jazz       0.27      0.62      0.38        37
+Old-Time / Historic       0.59      0.93      0.72        14
+                Pop       0.00      0.00      0.00        10
+               Rock       0.90      0.75      0.82       636
+           Soul-RnB       0.08      0.06      0.07        16
+             Spoken       0.60      0.90      0.72        10
+
+           accuracy                           0.70      1714
+          macro avg       0.41      0.48      0.42      1714
+       weighted avg       0.76      0.70      0.72      1714
