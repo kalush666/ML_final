@@ -54,7 +54,7 @@ class AudioFeatureExtractor:
             'chroma': self.extract_chroma(audio)
         }
 
-    def extract_combined_features(self, audio: np.ndarray) -> np.ndarray:
+    def extract_combined_features(self, audio: np.ndarray, target_length: int = 1292) -> np.ndarray:
         mfcc = self.extract_mfcc(audio)
         mel_spec = self.extract_mel_spectrogram(audio)
         chroma = self.extract_chroma(audio)
@@ -66,6 +66,13 @@ class AudioFeatureExtractor:
         chroma = chroma[:min_length, :]
 
         combined = np.concatenate([mfcc, mel_spec, chroma], axis=1)
+
+        if combined.shape[0] < target_length:
+            pad_width = target_length - combined.shape[0]
+            combined = np.pad(combined, ((0, pad_width), (0, 0)), mode='constant')
+        elif combined.shape[0] > target_length:
+            combined = combined[:target_length, :]
+
         return combined
 
     def process_file(self, file_path: Path) -> Tuple[np.ndarray, Dict[str, np.ndarray]]:

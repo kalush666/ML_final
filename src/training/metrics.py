@@ -91,9 +91,11 @@ class MetricsTracker:
                                       y_true: np.ndarray,
                                       y_pred: np.ndarray,
                                       save: bool = True) -> Dict:
+        labels = list(range(len(self.class_names)))
         report_dict = classification_report(
             y_true,
             y_pred,
+            labels=labels,
             target_names=self.class_names,
             output_dict=True,
             zero_division=0
@@ -106,6 +108,7 @@ class MetricsTracker:
         report_str = classification_report(
             y_true,
             y_pred,
+            labels=labels,
             target_names=self.class_names,
             zero_division=0
         )
@@ -117,9 +120,10 @@ class MetricsTracker:
         return report_dict
 
     def calculate_f1_scores(self, y_true: np.ndarray, y_pred: np.ndarray) -> Dict[str, float]:
-        f1_macro = f1_score(y_true, y_pred, average='macro')
-        f1_weighted = f1_score(y_true, y_pred, average='weighted')
-        f1_per_class = f1_score(y_true, y_pred, average=None)
+        labels = list(range(len(self.class_names)))
+        f1_macro = f1_score(y_true, y_pred, labels=labels, average='macro', zero_division=0)
+        f1_weighted = f1_score(y_true, y_pred, labels=labels, average='weighted', zero_division=0)
+        f1_per_class = f1_score(y_true, y_pred, labels=labels, average=None, zero_division=0)
 
         return {
             'f1_macro': float(f1_macro),

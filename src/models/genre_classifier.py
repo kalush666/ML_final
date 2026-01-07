@@ -74,6 +74,9 @@ class GenreCNNClassifier(BaseClassifier):
         if self.model is None:
             raise ValueError("Model not built yet")
 
+        X_train, y_train = train_data
+        X_val, y_val = val_data
+
         callbacks = [
             keras.callbacks.EarlyStopping(
                 monitor='val_loss',
@@ -94,8 +97,9 @@ class GenreCNNClassifier(BaseClassifier):
         ]
 
         history = self.model.fit(
-            train_data,
-            validation_data=val_data,
+            X_train,
+            y_train,
+            validation_data=(X_val, y_val),
             epochs=epochs,
             batch_size=batch_size,
             class_weight=self.class_weights,
@@ -119,5 +123,6 @@ class GenreCNNClassifier(BaseClassifier):
         if self.model is None:
             raise ValueError("Model not built yet")
 
-        results = self.model.evaluate(test_data, return_dict=True)
+        X_test, y_test = test_data
+        results = self.model.evaluate(X_test, y_test, return_dict=True, verbose=0)
         return results
