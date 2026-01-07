@@ -69,3 +69,5 @@ frontend/.sass-cache/
 # OS
 .DS_Store
 Thumbs.db
+
+.claude/ 

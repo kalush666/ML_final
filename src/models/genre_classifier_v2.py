@@ -71,19 +71,22 @@ class SpecAugment(layers.Layer):
         return augmented
 
 
-def residual_block(x, filters, kernel_size=(3, 3), dropout_rate=0.3):
+def residual_block(x, filters, kernel_size=(3, 3), dropout_rate=0.3, l2_reg=0.02):
     shortcut = x
-    x = layers.Conv2D(filters, kernel_size, padding='same')(x)
+    x = layers.Conv2D(filters, kernel_size, padding='same',
+                     kernel_regularizer=keras.regularizers.l2(l2_reg))(x)
     x = layers.BatchNormalization()(x)
     x = layers.ReLU()(x)
     x = layers.Dropout(dropout_rate)(x)
-    x = layers.Conv2D(filters, kernel_size, padding='same')(x)
+    x = layers.Conv2D(filters, kernel_size, padding='same',
+                     kernel_regularizer=keras.regularizers.l2(l2_reg))(x)
     x = layers.BatchNormalization()(x)
-    
+
     if shortcut.shape[-1] != filters:
-        shortcut = layers.Conv2D(filters, (1, 1), padding='same')(shortcut)
+        shortcut = layers.Conv2D(filters, (1, 1), padding='same',
+                                kernel_regularizer=keras.regularizers.l2(l2_reg))(shortcut)
         shortcut = layers.BatchNormalization()(shortcut)
-    
+
     x = layers.Add()([x, shortcut])
     x = layers.ReLU()(x)
     return x
@@ -99,12 +102,14 @@ class GenreCNNClassifierV2(BaseClassifier):
     def __init__(self,
                  num_classes: int,
                  input_shape: Tuple[int, int],
-                 dropout_rate: float = 0.4,
+                 dropout_rate: float = 0.5,
+                 l2_reg: float = 0.02,
                  use_augmentation: bool = True,
                  focal_gamma: float = 2.0,
                  label_smoothing: float = 0.1):
         super().__init__(num_classes, input_shape)
         self.dropout_rate = dropout_rate
+        self.l2_reg = l2_reg
         self.use_augmentation = use_augmentation
         self.focal_gamma = focal_gamma
         self.label_smoothing = label_smoothing
@@ -114,35 +119,36 @@ class GenreCNNClassifierV2(BaseClassifier):
         x = layers.Reshape((*self.input_shape, 1))(inputs)
         
         if self.use_augmentation:
-            x = SpecAugment(freq_mask_param=15, time_mask_param=30,
+            x = SpecAugment(freq_mask_param=20, time_mask_param=40,
                            num_freq_masks=2, num_time_masks=2)(x)
         
-        x = layers.Conv2D(32, (7, 7), strides=(2, 2), padding='same')(x)
+        x = layers.Conv2D(32, (7, 7), strides=(2, 2), padding='same',
+                         kernel_regularizer=keras.regularizers.l2(self.l2_reg))(x)
         x = layers.BatchNormalization()(x)
         x = layers.ReLU()(x)
         x = layers.MaxPooling2D((2, 2))(x)
-        
-        x = residual_block(x, 64, dropout_rate=self.dropout_rate * 0.5)
+
+        x = residual_block(x, 64, dropout_rate=self.dropout_rate * 0.6, l2_reg=self.l2_reg)
         x = layers.MaxPooling2D((2, 2))(x)
-        
-        x = residual_block(x, 128, dropout_rate=self.dropout_rate * 0.6)
+
+        x = residual_block(x, 128, dropout_rate=self.dropout_rate * 0.7, l2_reg=self.l2_reg)
         x = layers.MaxPooling2D((2, 2))(x)
-        
-        x = residual_block(x, 256, dropout_rate=self.dropout_rate * 0.7)
+
+        x = residual_block(x, 256, dropout_rate=self.dropout_rate * 0.8, l2_reg=self.l2_reg)
         x = layers.MaxPooling2D((2, 2))(x)
-        
-        x = residual_block(x, 512, dropout_rate=self.dropout_rate * 0.8)
-        
+
+        x = residual_block(x, 256, dropout_rate=self.dropout_rate * 0.9, l2_reg=self.l2_reg)
+
         avg_pool = layers.GlobalAveragePooling2D()(x)
         max_pool = layers.GlobalMaxPooling2D()(x)
         x = layers.Concatenate()([avg_pool, max_pool])
-        
-        x = layers.Dense(512, kernel_regularizer=keras.regularizers.l2(0.01))(x)
+
+        x = layers.Dense(512, kernel_regularizer=keras.regularizers.l2(self.l2_reg))(x)
         x = layers.BatchNormalization()(x)
         x = layers.ReLU()(x)
         x = layers.Dropout(self.dropout_rate)(x)
-        
-        x = layers.Dense(256, kernel_regularizer=keras.regularizers.l2(0.01))(x)
+
+        x = layers.Dense(256, kernel_regularizer=keras.regularizers.l2(self.l2_reg))(x)
         x = layers.BatchNormalization()(x)
         x = layers.ReLU()(x)
         x = layers.Dropout(self.dropout_rate)(x)
@@ -166,7 +172,11 @@ class GenreCNNClassifierV2(BaseClassifier):
                 label_smoothing=self.label_smoothing)
 
         self.model.compile(
-            optimizer=keras.optimizers.AdamW(learning_rate=learning_rate, weight_decay=0.01),
+            optimizer=keras.optimizers.AdamW(
+                learning_rate=learning_rate,
+                weight_decay=0.01,
+                clipnorm=1.0
+            ),
             loss=loss,
             metrics=['accuracy',
                      keras.metrics.Precision(name='precision'),
@@ -183,14 +193,25 @@ class GenreCNNClassifierV2(BaseClassifier):
         X_train, y_train = train_data
         X_val, y_val = val_data
 
+        initial_lr = float(tf.keras.backend.get_value(self.model.optimizer.learning_rate))
+        cosine_decay = keras.optimizers.schedules.CosineDecay(
+            initial_learning_rate=initial_lr,
+            decay_steps=epochs * (len(X_train) // batch_size),
+            alpha=0.1
+        )
+
         callbacks = [
-            keras.callbacks.EarlyStopping(monitor='val_loss', patience=15,
+            keras.callbacks.EarlyStopping(monitor='val_loss', patience=10,
                                          restore_best_weights=True, verbose=1),
-            keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.5,
-                                             patience=5, min_lr=1e-7, verbose=1),
+            keras.callbacks.LearningRateScheduler(
+                lambda epoch: cosine_decay(epoch * (len(X_train) // batch_size)),
+                verbose=0
+            ),
             keras.callbacks.ModelCheckpoint('models/checkpoints/genre_best_v2.keras',
                                            monitor='val_f1_score', mode='max',
                                            save_best_only=True, verbose=1),
+            keras.callbacks.ModelCheckpoint('models/checkpoints/genre_epoch_{epoch:02d}_v2.keras',
+                                           save_freq='epoch', period=5, verbose=0),
             LearningRateFormatter()
         ]
         

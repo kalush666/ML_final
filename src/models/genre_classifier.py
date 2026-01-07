@@ -10,37 +10,61 @@ class GenreCNNClassifier(BaseClassifier):
     def __init__(self,
                  num_classes: int,
                  input_shape: Tuple[int, int],
-                 dropout_rate: float = 0.5):
+                 dropout_rate: float = 0.6,
+                 l2_reg: float = 0.02):
         super().__init__(num_classes, input_shape)
         self.dropout_rate = dropout_rate
+        self.l2_reg = l2_reg
+
+    def _residual_block(self, x, filters, kernel_size=(3, 3)):
+        shortcut = x
+
+        x = layers.Conv2D(filters, kernel_size, padding='same',
+                         kernel_regularizer=keras.regularizers.l2(self.l2_reg))(x)
+        x = layers.BatchNormalization()(x)
+        x = layers.Activation('relu')(x)
+
+        x = layers.Conv2D(filters, kernel_size, padding='same',
+                         kernel_regularizer=keras.regularizers.l2(self.l2_reg))(x)
+        x = layers.BatchNormalization()(x)
+
+        if shortcut.shape[-1] != filters:
+            shortcut = layers.Conv2D(filters, (1, 1), padding='same',
+                                    kernel_regularizer=keras.regularizers.l2(self.l2_reg))(shortcut)
+            shortcut = layers.BatchNormalization()(shortcut)
+
+        x = layers.Add()([shortcut, x])
+        x = layers.Activation('relu')(x)
+
+        return x
 
     def build_model(self) -> None:
         inputs = keras.Input(shape=self.input_shape)
 
         x = layers.Reshape((*self.input_shape, 1))(inputs)
 
-        x = layers.Conv2D(32, (3, 3), activation='relu', padding='same')(x)
+        x = layers.Conv2D(32, (3, 3), activation='relu', padding='same',
+                         kernel_regularizer=keras.regularizers.l2(self.l2_reg))(x)
         x = layers.BatchNormalization()(x)
         x = layers.MaxPooling2D((2, 2))(x)
-        x = layers.Dropout(self.dropout_rate * 0.5)(x)
+        x = layers.Dropout(self.dropout_rate * 0.6)(x)
 
-        x = layers.Conv2D(64, (3, 3), activation='relu', padding='same')(x)
-        x = layers.BatchNormalization()(x)
-        x = layers.MaxPooling2D((2, 2))(x)
-        x = layers.Dropout(self.dropout_rate * 0.5)(x)
-
-        x = layers.Conv2D(128, (3, 3), activation='relu', padding='same')(x)
-        x = layers.BatchNormalization()(x)
+        x = self._residual_block(x, 64)
         x = layers.MaxPooling2D((2, 2))(x)
         x = layers.Dropout(self.dropout_rate * 0.7)(x)
 
-        x = layers.Conv2D(256, (3, 3), activation='relu', padding='same')(x)
-        x = layers.BatchNormalization()(x)
+        x = self._residual_block(x, 128)
+        x = layers.MaxPooling2D((2, 2))(x)
+        x = layers.Dropout(self.dropout_rate * 0.8)(x)
+
+        x = self._residual_block(x, 128)
         x = layers.GlobalAveragePooling2D()(x)
 
-        x = layers.Dense(512, activation='relu')(x)
+        x = layers.Dense(256, activation='relu',
+                        kernel_regularizer=keras.regularizers.l2(self.l2_reg))(x)
         x = layers.Dropout(self.dropout_rate)(x)
-        x = layers.Dense(256, activation='relu')(x)
+        x = layers.Dense(128, activation='relu',
+                        kernel_regularizer=keras.regularizers.l2(self.l2_reg))(x)
         x = layers.Dropout(self.dropout_rate)(x)
 
         outputs = layers.Dense(self.num_classes, activation='softmax')(x)

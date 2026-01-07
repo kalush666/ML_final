@@ -85,7 +85,8 @@ class GenreTrainingPipeline:
         self.model = GenreCNNClassifier(
             num_classes=num_classes,
             input_shape=input_shape,
-            dropout_rate=0.5
+            dropout_rate=0.6,
+            l2_reg=0.02
         )
 
         self.model.build_model()
@@ -175,4 +176,4 @@ if __name__ == "__main__":
         output_dir=Path("models/genre_classifier")
     )
 
-    pipeline.run(epochs=30, batch_size=64, learning_rate=0.001, use_subset=True, subset_size=2000)
+    pipeline.run(epochs=40, batch_size=64, learning_rate=0.001, use_subset=True, subset_size=2000)

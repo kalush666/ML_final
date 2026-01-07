@@ -177,7 +177,7 @@ class ImprovedGenreTrainingPipeline:
 
         self.model = GenreCNNClassifierV2(
             num_classes=num_classes, input_shape=input_shape,
-            dropout_rate=0.4, use_augmentation=True,
+            dropout_rate=0.5, l2_reg=0.02, use_augmentation=True,
             focal_gamma=2.0, label_smoothing=0.1)
 
         self.model.build_model()
