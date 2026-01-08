@@ -16,9 +16,7 @@ class SpecAugment(layers.Layer):
             return inputs
         
         shape = tf.shape(inputs)
-        batch_size = shape[0]
-        time_steps = shape[1]
-        freq_bins = shape[2]
+        batch_size, time_steps, freq_bins = shape[0], shape[1], shape[2]
         augmented = inputs
         
         for _ in range(self.num_freq_masks):
