@@ -88,7 +88,7 @@ class GenreCNNClassifierV2(BaseClassifier):
 
         self.class_weights = class_weights
         
-        loss = FocalLoss(gamma=self.focal_gamma, alpha=0.25,
+        loss = FocalLoss(gamma=self.focal_gamma,
                         label_smoothing=self.label_smoothing) if use_focal_loss else \
                keras.losses.CategoricalCrossentropy(label_smoothing=self.label_smoothing)
 
