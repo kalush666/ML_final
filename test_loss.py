@@ -2,6 +2,7 @@
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
+from src.models.training_utils.losses import FocalLoss
 
 # Create random data simulating 15-class classification
 np.random.seed(42)
@@ -28,13 +29,9 @@ print(f"Expected: ~2.7 (which is -log(1/15))")
 
 # Test with focal loss from our implementation
 print("\n" + "="*50)
-print("FOCAL LOSS (from src/models/losses.py)")
+print("FOCAL LOSS (from src/models/training_utils/losses.py)")
 print("="*50)
 try:
-    import sys
-    sys.path.insert(0, 'src/models')
-    from losses import FocalLoss
-    
     model2 = keras.Sequential([
         keras.layers.Input(shape=(1292, 160)),
         keras.layers.Reshape((1292, 160, 1)),

@@ -1,7 +1,7 @@
 import numpy as np
 from typing import Dict
 
-from .data_augmentation import apply_test_time_augmentation
+from ..training_utils.data_augmentation import apply_test_time_augmentation
 
 
 class InferenceEngine:
