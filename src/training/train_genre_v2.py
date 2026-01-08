@@ -201,13 +201,13 @@ class ImprovedGenreTrainingPipeline:
 
         return history
 
-    def evaluate_and_save_metrics(self, history: dict):
+    def evaluate_and_save_metrics(self, history: dict, use_tta: bool = True):
         print("\nEvaluating on test set...")
         test_metrics = self.model.evaluate((self.X_test, self.y_test))
         print(f"Test metrics: {test_metrics}")
 
-        print("\nGenerating predictions...")
-        y_pred_probs = self.model.predict(self.X_test)
+        print("\nGenerating predictions (TTA enabled: {})...".format(use_tta))
+        y_pred_probs = self.model.predict(self.X_test, use_tta=use_tta)
         y_pred = np.argmax(y_pred_probs, axis=1)
         y_true = np.argmax(self.y_test, axis=1)
 
