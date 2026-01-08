@@ -1,6 +1,8 @@
 from tensorflow import keras
 from tensorflow.keras import layers
 
+from ..layers.custom_layers import DropPath
+
 
 def squeeze_excitation_block(x, ratio=16):
     filters = x.shape[-1]
@@ -11,7 +13,8 @@ def squeeze_excitation_block(x, ratio=16):
     return layers.Multiply()([x, se])
 
 
-def residual_block(x, filters, kernel_size=(3, 3), dropout_rate=0.3, l2_reg=0.02, use_se=True):
+def residual_block(x, filters, kernel_size=(3, 3), dropout_rate=0.3, l2_reg=0.02, 
+                   use_se=True, drop_path_rate=0.0):
     shortcut = x
     x = layers.Conv2D(filters, kernel_size, padding='same',
                      kernel_regularizer=keras.regularizers.l2(l2_reg))(x)
@@ -24,6 +27,9 @@ def residual_block(x, filters, kernel_size=(3, 3), dropout_rate=0.3, l2_reg=0.02
     
     if use_se:
         x = squeeze_excitation_block(x)
+
+    if drop_path_rate > 0:
+        x = DropPath(drop_path_rate)(x)
 
     if shortcut.shape[-1] != filters:
         shortcut = layers.Conv2D(filters, (1, 1), padding='same',

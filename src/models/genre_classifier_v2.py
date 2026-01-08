@@ -17,7 +17,7 @@ class GenreCNNClassifierV2(BaseClassifier):
                  num_classes: int,
                  input_shape: Tuple[int, int],
                  dropout_rate: float = 0.5,
-                 l2_reg: float = 0.02,
+                 l2_reg: float = 0.0001,
                  use_augmentation: bool = True,
                  focal_gamma: float = 2.0,
                  label_smoothing: float = 0.1):

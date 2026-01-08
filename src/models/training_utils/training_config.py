@@ -19,8 +19,11 @@ class TrainingConfig:
             return float(cosine_decay(step).numpy())
 
         return [
-            keras.callbacks.EarlyStopping(monitor='val_loss', patience=10,
-                                         restore_best_weights=True, verbose=1),
+            keras.callbacks.EarlyStopping(monitor='val_loss', patience=15,
+                                         restore_best_weights=True, verbose=1,
+                                         min_delta=0.001),
+            keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.5,
+                                             patience=5, min_lr=1e-6, verbose=1),
             keras.callbacks.LearningRateScheduler(lr_schedule, verbose=0),
             keras.callbacks.ModelCheckpoint('models/checkpoints/genre_best_v2.keras',
                                            monitor='val_f1_score', mode='max',
