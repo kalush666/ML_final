@@ -1,5 +1,4 @@
 import numpy as np
-import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers, Model
 from typing import Tuple, Dict
@@ -7,9 +6,10 @@ from typing import Tuple, Dict
 from .base_classifier import BaseClassifier
 from .losses import FocalLoss
 from .custom_layers import SpecAugment
-from .model_blocks import residual_block
-from .custom_callbacks import LearningRateFormatter
-from .data_augmentation import MixupGenerator, apply_test_time_augmentation
+from .architecture_builder import ArchitectureBuilder
+from .training_config import TrainingConfig
+from .inference_engine import InferenceEngine
+from .data_augmentation import MixupGenerator
 
 
 class GenreCNNClassifierV2(BaseClassifier):
@@ -36,49 +36,12 @@ class GenreCNNClassifierV2(BaseClassifier):
             x = SpecAugment(freq_mask_param=20, time_mask_param=40,
                            num_freq_masks=2, num_time_masks=2)(x)
         
-        x = self._build_stem(x)
-        x = self._build_residual_tower(x)
-        x = self._build_head(x)
+        x = ArchitectureBuilder.build_stem(x, self.l2_reg)
+        x = ArchitectureBuilder.build_residual_tower(x, self.dropout_rate, self.l2_reg)
+        x = ArchitectureBuilder.build_head(x, self.dropout_rate, self.l2_reg)
         
         outputs = layers.Dense(self.num_classes, activation='softmax')(x)
         self.model = Model(inputs=inputs, outputs=outputs, name='genre_cnn_classifier_v2')
-
-    def _build_stem(self, x):
-        x = layers.Conv2D(32, (7, 7), strides=(2, 2), padding='same',
-                         kernel_regularizer=keras.regularizers.l2(self.l2_reg))(x)
-        x = layers.BatchNormalization()(x)
-        x = layers.ReLU()(x)
-        x = layers.MaxPooling2D((2, 2))(x)
-        return x
-
-    def _build_residual_tower(self, x):
-        filters_list = [64, 128, 256, 256]
-        dropout_scales = [0.6, 0.7, 0.8, 0.9]
-        
-        for filters, scale in zip(filters_list, dropout_scales):
-            x = residual_block(x, filters, 
-                             dropout_rate=self.dropout_rate * scale, 
-                             l2_reg=self.l2_reg)
-            if filters != 256 or scale != 0.9:
-                x = layers.MaxPooling2D((2, 2))(x)
-        return x
-
-    def _build_head(self, x):
-        avg_pool = layers.GlobalAveragePooling2D()(x)
-        max_pool = layers.GlobalMaxPooling2D()(x)
-        x = layers.Concatenate()([avg_pool, max_pool])
-
-        x = layers.Dense(512, kernel_regularizer=keras.regularizers.l2(self.l2_reg))(x)
-        x = layers.BatchNormalization()(x)
-        x = layers.ReLU()(x)
-        x = layers.Dropout(self.dropout_rate)(x)
-
-        x = layers.Dense(256, kernel_regularizer=keras.regularizers.l2(self.l2_reg))(x)
-        x = layers.BatchNormalization()(x)
-        x = layers.ReLU()(x)
-        x = layers.Dropout(self.dropout_rate)(x)
-        
-        return x
 
     def compile_model(self, learning_rate: float = 0.001,
                      class_weights: Dict[int, float] = None,
@@ -93,37 +56,10 @@ class GenreCNNClassifierV2(BaseClassifier):
                keras.losses.CategoricalCrossentropy(label_smoothing=self.label_smoothing)
 
         self.model.compile(
-            optimizer=keras.optimizers.AdamW(learning_rate=learning_rate,
-                                            weight_decay=0.01, clipnorm=1.0),
+            optimizer=TrainingConfig.get_optimizer(learning_rate),
             loss=loss,
-            metrics=['accuracy',
-                     keras.metrics.Precision(name='precision'),
-                     keras.metrics.Recall(name='recall'),
-                     keras.metrics.AUC(name='auc'),
-                     keras.metrics.F1Score(name='f1_score', average='macro')]
+            metrics=TrainingConfig.get_metrics()
         )
-
-    def _create_callbacks(self, X_train, batch_size, epochs):
-        initial_lr = float(tf.keras.backend.get_value(self.model.optimizer.learning_rate))
-        cosine_decay = keras.optimizers.schedules.CosineDecay(
-            initial_learning_rate=initial_lr,
-            decay_steps=epochs * (len(X_train) // batch_size),
-            alpha=0.1
-        )
-
-        def lr_schedule(epoch):
-            step = epoch * (len(X_train) // batch_size)
-            return float(cosine_decay(step).numpy())
-
-        return [
-            keras.callbacks.EarlyStopping(monitor='val_loss', patience=10,
-                                         restore_best_weights=True, verbose=1),
-            keras.callbacks.LearningRateScheduler(lr_schedule, verbose=0),
-            keras.callbacks.ModelCheckpoint('models/checkpoints/genre_best_v2.keras',
-                                           monitor='val_f1_score', mode='max',
-                                           save_best_only=True, verbose=1),
-            LearningRateFormatter()
-        ]
 
     def train(self, train_data, val_data, epochs: int = 50,
               batch_size: int = 32, use_mixup: bool = True) -> Dict:
@@ -132,7 +68,7 @@ class GenreCNNClassifierV2(BaseClassifier):
 
         X_train, y_train = train_data
         X_val, y_val = val_data
-        callbacks = self._create_callbacks(X_train, batch_size, epochs)
+        callbacks = TrainingConfig.create_callbacks(self.model, X_train, batch_size, epochs)
         
         if use_mixup:
             mixup_gen = MixupGenerator(X_train, y_train, batch_size)
@@ -164,17 +100,10 @@ class GenreCNNClassifierV2(BaseClassifier):
     def predict(self, features: np.ndarray, use_tta: bool = False) -> np.ndarray:
         if self.model is None:
             raise ValueError("Model not built yet")
-        if len(features.shape) == 2:
-            features = np.expand_dims(features, axis=0)
-        
-        if use_tta:
-            return apply_test_time_augmentation(self.model, features)
-        
-        return self.model.predict(features)
+        return InferenceEngine.predict(self.model, features, use_tta)
 
     def evaluate(self, test_data) -> Dict:
         if self.model is None:
             raise ValueError("Model not built yet")
-        X_test, y_test = test_data
-        return self.model.evaluate(X_test, y_test, return_dict=True, verbose=0)
+        return InferenceEngine.evaluate(self.model, test_data)
 
