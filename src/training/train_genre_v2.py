@@ -102,10 +102,12 @@ class ImprovedGenreTrainingPipeline:
         return X_filtered, y_filtered, top_class_names
 
     def prepare_datasets(self, use_oversampling: bool = True, 
-                         target_samples_per_class: int = None):
-        print("Loading training data...")
+                         target_samples_per_class: int = None,
+                         n_segments_train: int = 3):
+        print(f"Loading training data with {n_segments_train} segments per track...")
         train_gen = GenreDataGenerator(
-            self.train_csv, self.audio_dir, self.feature_extractor)
+            self.train_csv, self.audio_dir, self.feature_extractor,
+            n_segments=n_segments_train)
         train_gen.prepare_data()
         self.X_train, self.y_train, self.class_names = train_gen.generate_dataset()
         
@@ -177,8 +179,8 @@ class ImprovedGenreTrainingPipeline:
 
         self.model = GenreCNNClassifierV2(
             num_classes=num_classes, input_shape=input_shape,
-            dropout_rate=0.5, l2_reg=0.0001, use_augmentation=True,
-            focal_gamma=2.0, label_smoothing=0.1)
+            dropout_rate=0.6, l2_reg=0.0005, use_augmentation=True,
+            focal_gamma=3.0, label_smoothing=0.1)
 
         self.model.build_model()
         self.model.compile_model(
@@ -240,12 +242,14 @@ class ImprovedGenreTrainingPipeline:
             learning_rate: float = 0.0005,
             use_oversampling: bool = True,
             use_mixup: bool = True,
-            use_focal_loss: bool = True):
+            use_focal_loss: bool = True,
+            n_segments_train: int = 3):
         print("="*70)
         print(" "*15 + "IMPROVED GENRE CLASSIFIER TRAINING (V2)")
         print("="*70)
 
-        self.prepare_datasets(use_oversampling=use_oversampling)
+        self.prepare_datasets(use_oversampling=use_oversampling, 
+                             n_segments_train=n_segments_train)
         self.build_and_compile_model(learning_rate=learning_rate, use_focal_loss=use_focal_loss)
         history = self.train_model(epochs=epochs, batch_size=batch_size, use_mixup=use_mixup)
         self.evaluate_and_save_metrics(history)
@@ -269,14 +273,15 @@ if __name__ == '__main__':
         test_csv=test_csv,
         audio_dir=audio_dir,
         output_dir=output_dir,
-        top_n_classes=None
+        top_n_classes=6
     )
 
     pipeline.run(
-        epochs=60,
+        epochs=80,
         batch_size=32,
-        learning_rate=0.0005,
+        learning_rate=0.0003,
         use_oversampling=True,
-        use_mixup=True,
-        use_focal_loss=True
+        use_mixup=False,
+        use_focal_loss=True,
+        n_segments_train=3
     )

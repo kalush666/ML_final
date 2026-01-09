@@ -18,12 +18,14 @@ class GenreDataGenerator:
                  audio_dir: Path,
                  feature_extractor: AudioFeatureExtractor,
                  batch_size: int = 32,
-                 num_workers: int = None):
+                 num_workers: int = None,
+                 n_segments: int = 1):
         self.csv_path = Path(csv_path)
         self.audio_dir = Path(audio_dir)
         self.feature_extractor = feature_extractor
         self.batch_size = batch_size
         self.num_workers = num_workers or max(1, cpu_count() - 1)
+        self.n_segments = n_segments
 
         self.df = pd.read_csv(csv_path, index_col=0, header=[0, 1])
         self.label_encoder = LabelEncoder()
@@ -50,9 +52,14 @@ class GenreDataGenerator:
         audio_path = self.get_audio_path(track_id)
 
         try:
-            audio = self.feature_extractor.load_audio(audio_path)
-            features = self.feature_extractor.extract_combined_features(audio)
-            return features
+            if self.n_segments > 1:
+                segments = self.feature_extractor.extract_multi_segments(
+                    audio_path, n_segments=self.n_segments, random_offset=True)
+                return segments
+            else:
+                audio = self.feature_extractor.load_audio(audio_path)
+                features = self.feature_extractor.extract_combined_features(audio)
+                return features
         except Exception as e:
             print(f"Error loading {audio_path}: {e}")
             return None
@@ -85,12 +92,17 @@ class GenreDataGenerator:
             features = self.load_and_extract_features(track_id)
 
             if features is not None:
-                features_list.append(features)
-                labels_list.append(self.encoded_labels[idx])
+                if self.n_segments > 1:
+                    for seg_features in features:
+                        features_list.append(seg_features)
+                        labels_list.append(self.encoded_labels[idx])
+                else:
+                    features_list.append(features)
+                    labels_list.append(self.encoded_labels[idx])
                 valid_indices.append(idx)
 
-            if len(features_list) % 100 == 0:
-                print(f"Processed {len(features_list)} tracks...")
+            if len(valid_indices) % 100 == 0:
+                print(f"Processed {len(valid_indices)} tracks...")
 
         features_array = np.array(features_list)
         labels_array = np.array(labels_list)
