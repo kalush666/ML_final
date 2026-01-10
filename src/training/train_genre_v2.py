@@ -277,11 +277,11 @@ if __name__ == '__main__':
     )
 
     pipeline.run(
-        epochs=80,
+        epochs=60,
         batch_size=32,
         learning_rate=0.0003,
         use_oversampling=True,
-        use_mixup=False,
+        use_mixup=True,
         use_focal_loss=True,
-        n_segments_train=3
+        n_segments_train=4
     )
