@@ -125,7 +125,7 @@ class ImprovedGenreTrainingPipeline:
         class_counts = Counter(y_indices)
         total = len(y_indices)
         self.class_weights = {
-            idx: total / (self.num_classes * count) 
+            idx: np.sqrt(total / (self.num_classes * count))
             for idx, count in class_counts.items()
         }
         
@@ -273,7 +273,7 @@ if __name__ == '__main__':
         test_csv=test_csv,
         audio_dir=audio_dir,
         output_dir=output_dir,
-        top_n_classes=6
+        top_n_classes=8
     )
 
     pipeline.run(
@@ -282,6 +282,6 @@ if __name__ == '__main__':
         learning_rate=0.0003,
         use_oversampling=True,
         use_mixup=True,
-        use_focal_loss=True,
+        use_focal_loss=True, 
         n_segments_train=4
     )

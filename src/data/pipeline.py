@@ -54,8 +54,11 @@ class DataPreparationPipeline:
             clean_tracks, corrupted
         )
 
+        protected_genres = ['Jazz', 'Experimental', 'Folk', 'Instrumental', 
+                           'Blues', 'Country', 'Soul-RnB', 'Spoken']
         clean_tracks = self.metadata_cleaner.filter_min_tracks_per_artist(
-            clean_tracks, artist_col, min_tracks=5
+            clean_tracks, artist_col, min_tracks=5,
+            protected_genres=protected_genres, genre_column=genre_col
         )
         print(f"After filtering artists: {len(clean_tracks)}")
 

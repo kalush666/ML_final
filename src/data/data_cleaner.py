@@ -59,7 +59,21 @@ class MetadataCleaner:
     @staticmethod
     def filter_min_tracks_per_artist(df: pd.DataFrame,
                                     artist_column: Tuple[str, str],
-                                    min_tracks: int = 5) -> pd.DataFrame:
-        artist_counts = df[artist_column].value_counts()
-        valid_artists = artist_counts[artist_counts >= min_tracks].index
-        return df[df[artist_column].isin(valid_artists)]
+                                    min_tracks: int = 5,
+                                    protected_genres: List[str] = None,
+                                    genre_column: Tuple[str, str] = None) -> pd.DataFrame:
+        """Filter artists with too few tracks, but protect minority genres."""
+        if protected_genres and genre_column:
+            protected_mask = df[genre_column].isin(protected_genres)
+            protected_df = df[protected_mask]
+            unprotected_df = df[~protected_mask]
+            
+            artist_counts = unprotected_df[artist_column].value_counts()
+            valid_artists = artist_counts[artist_counts >= min_tracks].index
+            filtered_unprotected = unprotected_df[unprotected_df[artist_column].isin(valid_artists)]
+            
+            return pd.concat([protected_df, filtered_unprotected])
+        else:
+            artist_counts = df[artist_column].value_counts()
+            valid_artists = artist_counts[artist_counts >= min_tracks].index
+            return df[df[artist_column].isin(valid_artists)]
