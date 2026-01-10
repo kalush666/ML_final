@@ -1,0 +1,62 @@
+from models.genre_classifier_v2 import GenreCNNClassifierV2
+from .config import GTZANConfig
+
+
+class GTZANModelTrainer:
+    
+    def __init__(self, config: GTZANConfig):
+        self.config = config
+        self.classifier_model = None
+        
+    def initialize_model(self, input_shape: tuple, class_weights: dict):
+        print("\nBuilding model...")
+        print(f"  Input shape: {input_shape}")
+        print(f"  Number of classes: {self.config.number_of_classes}")
+        
+        self.classifier_model = GenreCNNClassifierV2(
+            num_classes=self.config.number_of_classes,
+            input_shape=input_shape,
+            dropout_rate=self.config.dropout_rate,
+            l2_reg=self.config.l2_regularization,
+            use_augmentation=self.config.enable_specaugment,
+            focal_gamma=self.config.focal_loss_gamma,
+            label_smoothing=self.config.label_smoothing_factor
+        )
+        
+        self.classifier_model.build_model()
+        
+        self.classifier_model.compile_model(
+            learning_rate=self.config.initial_learning_rate,
+            class_weights=class_weights,
+            use_focal_loss=True
+        )
+        
+        self._print_model_architecture()
+        
+    def _print_model_architecture(self):
+        print("\nModel Summary:")
+        print(self.classifier_model.get_model_summary())
+        
+    def execute_training(self, training_features, training_labels, 
+                         validation_features, validation_labels):
+        print(f"\nStarting training for {self.config.training_epochs} epochs...")
+        print(f"  Batch size: {self.config.batch_size}")
+        print(f"  Using mixup: {self.config.enable_mixup_augmentation}")
+        
+        training_history = self.classifier_model.train(
+            train_data=(training_features, training_labels),
+            val_data=(validation_features, validation_labels),
+            epochs=self.config.training_epochs,
+            batch_size=self.config.batch_size,
+            use_mixup=self.config.enable_mixup_augmentation
+        )
+        
+        return training_history
+    
+    def save_trained_model(self):
+        model_save_path = self.config.model_output_directory / 'gtzan_classifier_final.keras'
+        self.classifier_model.save_model(model_save_path)
+        print(f"\nModel saved to: {model_save_path}")
+        
+    def get_model(self):
+        return self.classifier_model

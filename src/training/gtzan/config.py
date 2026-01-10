@@ -1,0 +1,52 @@
+from pathlib import Path
+from dataclasses import dataclass
+
+
+GENRE_LABELS_10 = [
+    "blues", "classical", "country", "disco", "hiphop",
+    "jazz", "metal", "pop", "reggae", "rock"
+]
+
+GENRE_LABELS_8 = [
+    "blues", "classical", "country", "disco", 
+    "hiphop", "jazz", "metal", "reggae"
+]
+
+EXCLUDED_GENRES = ["rock", "pop"]
+
+
+@dataclass
+class GTZANConfig:
+    train_csv_path: Path = Path('data/processed/gtzan_splits/train.csv')
+    validation_csv_path: Path = Path('data/processed/gtzan_splits/val.csv')
+    test_csv_path: Path = Path('data/processed/gtzan_splits/test.csv')
+    model_output_directory: Path = Path('models/gtzan_classifier')
+    
+    training_epochs: int = 100
+    batch_size: int = 24
+    initial_learning_rate: float = 0.00015
+    segments_per_track: int = 5
+    
+    dropout_rate: float = 0.65
+    l2_regularization: float = 0.001
+    focal_loss_gamma: float = 3.0
+    label_smoothing_factor: float = 0.15
+    
+    enable_mixup_augmentation: bool = True
+    enable_specaugment: bool = True
+    enable_test_time_augmentation: bool = True
+    
+    @property
+    def number_of_classes(self) -> int:
+        return len(GENRE_LABELS_10)
+    
+    @property
+    def genre_names(self) -> list:
+        return GENRE_LABELS_10
+    
+    def validate_paths(self) -> bool:
+        return all([
+            self.train_csv_path.exists(),
+            self.validation_csv_path.exists(),
+            self.test_csv_path.exists()
+        ])
