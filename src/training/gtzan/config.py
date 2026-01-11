@@ -34,9 +34,12 @@ class GTZANConfig:
     label_smoothing_factor: float = 0.1
     
     enable_mixup_augmentation: bool = True
+    mixup_alpha: float = 0.3
     enable_specaugment: bool = True
+    freq_mask_param: int = 10
+    time_mask_param: int = 30
     enable_test_time_augmentation: bool = True
-    
+
     use_adaptive_focal_loss: bool = False
     confidence_penalty: float = 0.15
     per_class_gamma: Optional[List[float]] = None
