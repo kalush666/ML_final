@@ -13,9 +13,9 @@ def main():
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
     config = GTZANConfig(
-        train_csv_path=Path('data/processed/gtzan_splits/train.csv'),
-        validation_csv_path=Path('data/processed/gtzan_splits/val.csv'),
-        test_csv_path=Path('data/processed/gtzan_splits/test.csv'),
+        train_csv_path=Path('data/processed/gtzan_splits/train_fixed.csv'),
+        validation_csv_path=Path('data/processed/gtzan_splits/val_fixed.csv'),
+        test_csv_path=Path('data/processed/gtzan_splits/test_fixed.csv'),
         model_output_directory=Path('models/gtzan_classifier_v2'),
 
         training_epochs=100,

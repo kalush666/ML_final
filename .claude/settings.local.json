@@ -5,7 +5,30 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(git push)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(..venv311Scriptspython.exe -c \"import sys; print\\(''Python version:'', sys.version\\)\")",
+      "Bash(d:/Projects/ml_final/.venv311/Scripts/python.exe:*)",
+      "Bash(d:/Projects/ml_final/check_gpu.bat)",
+      "Bash(d:/Projects/ml_final/setup_gpu.bat)",
+      "Bash(d:/Projects/ml_final/setup_pytorch.bat)",
+      "Bash(d:\\\\Projects\\\\ml_final\\\\.venv311\\\\Scripts\\\\pip.exe uninstall:*)",
+      "Bash(cmd.exe /c \"d:\\\\Projects\\\\ml_final\\\\.venv311\\\\Scripts\\\\pip.exe uninstall -y tensorflow tensorflow-io-gcs-filesystem\")",
+      "Bash(cmd.exe /c \"d:\\\\Projects\\\\ml_final\\\\.venv311\\\\Scripts\\\\pip.exe install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124\")",
+      "Bash(cmd.exe /c \"d:\\\\Projects\\\\ml_final\\\\.venv311\\\\Scripts\\\\pip.exe install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121\")",
+      "Bash(cmd.exe /c \"d:\\\\Projects\\\\ml_final\\\\install_pytorch.bat\")",
+      "Bash(powershell.exe -Command \"& { Set-Location ''d:\\\\Projects\\\\ml_final''; & ''.venv311\\\\Scripts\\\\pip.exe'' uninstall -y tensorflow tensorflow-io-gcs-filesystem }\")",
+      "Bash(powershell.exe -Command \"& { Set-Location ''d:\\\\Projects\\\\ml_final''; & ''.venv311\\\\Scripts\\\\pip.exe'' install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121 }\")",
+      "Bash(powershell.exe -Command \"& { Set-Location ''d:\\\\Projects\\\\ml_final''; & ''.venv311\\\\Scripts\\\\pip.exe'' install torch torchvision torchaudio }\")",
+      "Bash(powershell.exe -Command \"& { Set-Location ''d:\\\\Projects\\\\ml_final''; & ''.venv311\\\\Scripts\\\\python.exe'' -c ''import torch; print\\(f\"\"PyTorch: {torch.__version__}\"\"\\); print\\(f\"\"CUDA available: {torch.cuda.is_available\\(\\)}\"\"\\); print\\(f\"\"CUDA version: {torch.version.cuda}\"\"\\); print\\(f\"\"GPU: {torch.cuda.get_device_name\\(0\\) if torch.cuda.is_available\\(\\) else \"\"None\"\"}\"\"\\)'' }\")",
+      "Bash(powershell.exe -Command \"& { Set-Location ''d:\\\\Projects\\\\ml_final''; & ''.venv311\\\\Scripts\\\\python.exe'' test_pytorch_gpu.py }\")",
+      "Bash(powershell.exe -Command \"& { Set-Location ''d:\\\\Projects\\\\ml_final''; & ''.venv311\\\\Scripts\\\\pip.exe'' uninstall -y torch torchvision torchaudio }\")",
+      "Bash(powershell.exe -Command \"& { Set-Location ''d:\\\\Projects\\\\ml_final''; & ''.venv311\\\\Scripts\\\\pip.exe'' install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu121 }\")",
+      "Bash(powershell.exe -Command \"& { Set-Location ''d:\\\\Projects\\\\ml_final''; & ''.venv311\\\\Scripts\\\\pip.exe'' install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu124 }\")",
+      "Bash(powershell.exe -Command \"& { Set-Location ''d:\\\\Projects\\\\ml_final''; & ''.venv311\\\\Scripts\\\\pip.exe'' install --pre torch torchvision --index-url https://download.pytorch.org/whl/nightly/cu124 }\")",
+      "Bash(powershell.exe -Command \"& { Set-Location ''d:\\\\Projects\\\\ml_final''; Remove-Item -Force test_pytorch_gpu.py,install_pytorch.bat,setup_wsl2.bat,setup_wsl2_part2.sh,update_csv_paths.sh,INSTALL_WSL2.md,RUN_TRAINING.md -ErrorAction SilentlyContinue; Remove-Item -Recurse -Force ''src/utils/gpu_config.py'' -ErrorAction SilentlyContinue; echo ''Removed files'' }\")",
+      "Bash(powershell.exe -Command \"& { Set-Location ''d:\\\\Projects\\\\ml_final''; Remove-Item -Recurse -Force ''venv_wsl'',''cuda-keyring_1.1-1_all.deb'',''2.18.0'',''4.14.1'' -ErrorAction SilentlyContinue; echo ''Cleaned up WSL2 files'' }\")",
+      "Bash(powershell.exe -Command \"& { Set-Location ''d:\\\\Projects\\\\ml_final''; & ''.venv311\\\\Scripts\\\\pip.exe'' uninstall -y torch torchvision }\")",
+      "Bash(powershell.exe -Command \"& { Set-Location ''d:\\\\Projects\\\\ml_final''; & ''.venv311\\\\Scripts\\\\pip.exe'' install tensorflow-cpu }\")"
     ]
   }
 }
