@@ -1,7 +1,7 @@
 import tensorflow as tf
 from tensorflow import keras
 
-from .custom_callbacks import LearningRateFormatter
+from .custom_callbacks import LearningRateFormatter, F1EarlyStopping
 
 
 class TrainingConfig:
@@ -22,6 +22,7 @@ class TrainingConfig:
             keras.callbacks.EarlyStopping(monitor='val_loss', patience=15,
                                          restore_best_weights=True, verbose=1,
                                          min_delta=0.001),
+            F1EarlyStopping(monitor='val_f1_score', patience=15, min_delta=0.001, verbose=1, restore_best_weights=True),
             keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.5,
                                              patience=5, min_lr=1e-6, verbose=1),
             keras.callbacks.LearningRateScheduler(lr_schedule, verbose=0),

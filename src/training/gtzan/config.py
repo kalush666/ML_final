@@ -1,5 +1,6 @@
 from pathlib import Path
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import List, Optional
 
 
 GENRE_LABELS_10 = [
@@ -35,6 +36,10 @@ class GTZANConfig:
     enable_mixup_augmentation: bool = True
     enable_specaugment: bool = True
     enable_test_time_augmentation: bool = True
+    
+    use_adaptive_focal_loss: bool = False
+    confidence_penalty: float = 0.15
+    per_class_gamma: Optional[List[float]] = None
     
     @property
     def number_of_classes(self) -> int:

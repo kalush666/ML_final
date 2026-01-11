@@ -48,12 +48,14 @@ class AudioFeatureExtractor:
                  n_mfcc: int = 20,
                  n_mels: int = 128,
                  n_chroma: int = 12,
+                 include_rhythm: bool = True,
                  load_timeout: int = 60):
         self.sample_rate = sample_rate
         self.duration = duration
         self.n_mfcc = n_mfcc
         self.n_mels = n_mels
         self.n_chroma = n_chroma
+        self.include_rhythm = include_rhythm
         self.load_timeout = load_timeout
 
     def _load_audio_impl(self, file_path: Path, offset: float = 0.0) -> np.ndarray:
@@ -175,12 +177,51 @@ class AudioFeatureExtractor:
             n_chroma=self.n_chroma
         )
         return chroma.T
+    
+    def extract_rhythm_features(self, audio: np.ndarray) -> np.ndarray:
+        onset_env = librosa.onset.onset_strength(y=audio, sr=self.sample_rate)
+        
+        tempo, beat_frames = librosa.beat.beat_track(
+            y=audio, sr=self.sample_rate, onset_envelope=onset_env
+        )
+        
+        spectral_flux = librosa.onset.onset_strength(
+            y=audio, sr=self.sample_rate, aggregate=np.median
+        )
+        
+        rms = librosa.feature.rms(y=audio)[0]
+        zcr = librosa.feature.zero_crossing_rate(y=audio)[0]
+        
+        contrast = librosa.feature.spectral_contrast(y=audio, sr=self.sample_rate)
+        contrast_mean = np.mean(contrast, axis=0)
+        
+        target_len = len(onset_env)
+        
+        def resample_feature(feat, target_len):
+            if len(feat) == target_len:
+                return feat
+            indices = np.linspace(0, len(feat) - 1, target_len).astype(int)
+            return feat[indices]
+        
+        rms_resampled = resample_feature(rms, target_len)
+        zcr_resampled = resample_feature(zcr, target_len)
+        contrast_resampled = resample_feature(contrast_mean, target_len)
+        
+        rhythm_features = np.stack([
+            onset_env / (np.max(onset_env) + 1e-8),
+            rms_resampled / (np.max(rms_resampled) + 1e-8),
+            zcr_resampled / (np.max(zcr_resampled) + 1e-8),
+            contrast_resampled / (np.max(np.abs(contrast_resampled)) + 1e-8)
+        ], axis=1)
+        
+        return rhythm_features
 
     def extract_all_features(self, audio: np.ndarray) -> Dict[str, np.ndarray]:
         return {
             'mfcc': self.extract_mfcc(audio),
             'mel_spectrogram': self.extract_mel_spectrogram(audio),
-            'chroma': self.extract_chroma(audio)
+            'chroma': self.extract_chroma(audio),
+            'rhythm': self.extract_rhythm_features(audio) if self.include_rhythm else None
         }
 
     def extract_combined_features(self, audio: np.ndarray, target_length: int = 1292) -> np.ndarray:
@@ -194,7 +235,14 @@ class AudioFeatureExtractor:
         mel_spec = mel_spec[:min_length, :]
         chroma = chroma[:min_length, :]
 
-        combined = np.concatenate([mfcc, mel_spec, chroma], axis=1)
+        if self.include_rhythm:
+            rhythm = self.extract_rhythm_features(audio)
+            if rhythm.shape[0] != min_length:
+                indices = np.linspace(0, rhythm.shape[0] - 1, min_length).astype(int)
+                rhythm = rhythm[indices, :]
+            combined = np.concatenate([mfcc, mel_spec, chroma, rhythm], axis=1)
+        else:
+            combined = np.concatenate([mfcc, mel_spec, chroma], axis=1)
 
         if combined.shape[0] < target_length:
             pad_width = target_length - combined.shape[0]

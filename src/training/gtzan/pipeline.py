@@ -8,11 +8,14 @@ from .evaluator import GTZANModelEvaluator
 
 class GTZANTrainingOrchestrator:
     
-    def __init__(self, config: GTZANConfig = None):
+    def __init__(self, config: GTZANConfig = None, include_rhythm_features: bool = True):
         self.config = config or GTZANConfig()
         self.config.model_output_directory.mkdir(parents=True, exist_ok=True)
         
-        self.dataset_loader = GTZANDatasetLoader(self.config)
+        self.dataset_loader = GTZANDatasetLoader(
+            self.config, 
+            include_rhythm_features=include_rhythm_features
+        )
         self.model_trainer = GTZANModelTrainer(self.config)
         self.model_evaluator = GTZANModelEvaluator(self.config)
         

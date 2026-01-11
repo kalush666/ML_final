@@ -10,9 +10,12 @@ from .config import GTZANConfig
 
 class GTZANDatasetLoader:
     
-    def __init__(self, config: GTZANConfig):
+    def __init__(self, config: GTZANConfig, include_rhythm_features: bool = True):
         self.config = config
-        self.audio_feature_extractor = AudioFeatureExtractor()
+        self.include_rhythm_features = include_rhythm_features
+        self.audio_feature_extractor = AudioFeatureExtractor(
+            include_rhythm=include_rhythm_features
+        )
         self.genre_to_index_mapping = {
             genre: idx for idx, genre in enumerate(config.genre_names)
         }
@@ -24,6 +27,11 @@ class GTZANDatasetLoader:
         self.test_features = None
         self.test_labels = None
         self.computed_class_weights = None
+        
+        if include_rhythm_features:
+            print("  Feature extraction: Including rhythm features (164 dims)")
+        else:
+            print("  Feature extraction: Standard features only (160 dims)")
         
     def load_all_datasets(self):
         self._load_training_data()
@@ -122,9 +130,19 @@ class GTZANDatasetLoader:
         class_sample_counts = Counter(label_indices)
         total_samples = len(label_indices)
         
-        self.computed_class_weights = {
+        base_weights = {
             class_index: np.sqrt(total_samples / (self.config.number_of_classes * sample_count))
             for class_index, sample_count in class_sample_counts.items()
+        }
+        
+        strategic_multipliers = {
+            0: 0.7, 1: 1.0, 2: 1.0, 3: 1.3, 4: 1.0,
+            5: 1.0, 6: 1.0, 7: 1.3, 8: 1.0, 9: 1.5
+        }
+        
+        self.computed_class_weights = {
+            class_index: base_weights[class_index] * strategic_multipliers.get(class_index, 1.0)
+            for class_index in base_weights
         }
         
         self._print_class_distribution(class_sample_counts)

@@ -12,6 +12,7 @@ class GTZANModelTrainer:
         print("\nBuilding model...")
         print(f"  Input shape: {input_shape}")
         print(f"  Number of classes: {self.config.number_of_classes}")
+        print(f"  Adaptive focal loss: {self.config.use_adaptive_focal_loss}")
         
         self.classifier_model = GenreCNNClassifierV2(
             num_classes=self.config.number_of_classes,
@@ -20,7 +21,10 @@ class GTZANModelTrainer:
             l2_reg=self.config.l2_regularization,
             use_augmentation=self.config.enable_specaugment,
             focal_gamma=self.config.focal_loss_gamma,
-            label_smoothing=self.config.label_smoothing_factor
+            label_smoothing=self.config.label_smoothing_factor,
+            use_adaptive_loss=self.config.use_adaptive_focal_loss,
+            per_class_gamma=self.config.per_class_gamma,
+            confidence_penalty=self.config.confidence_penalty
         )
         
         self.classifier_model.build_model()

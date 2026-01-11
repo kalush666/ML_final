@@ -1,10 +1,10 @@
 import numpy as np
 from tensorflow import keras
 from tensorflow.keras import layers, Model
-from typing import Tuple, Dict
+from typing import Tuple, Dict, List, Optional
 
 from .base_classifier import BaseClassifier
-from .training_utils.losses import FocalLoss
+from .training_utils.losses import FocalLoss, AdaptiveFocalLoss, create_gtzan_adaptive_loss
 from .layers.custom_layers import SpecAugment
 from .architecture.architecture_builder import ArchitectureBuilder
 from .training_utils.training_config import TrainingConfig
@@ -20,13 +20,19 @@ class GenreCNNClassifierV2(BaseClassifier):
                  l2_reg: float = 0.0001,
                  use_augmentation: bool = True,
                  focal_gamma: float = 2.0,
-                 label_smoothing: float = 0.1):
+                 label_smoothing: float = 0.1,
+                 use_adaptive_loss: bool = False,
+                 per_class_gamma: Optional[List[float]] = None,
+                 confidence_penalty: float = 0.15):
         super().__init__(num_classes, input_shape)
         self.dropout_rate = dropout_rate
         self.l2_reg = l2_reg
         self.use_augmentation = use_augmentation
         self.focal_gamma = focal_gamma
         self.label_smoothing = label_smoothing
+        self.use_adaptive_loss = use_adaptive_loss
+        self.per_class_gamma = per_class_gamma
+        self.confidence_penalty = confidence_penalty
 
     def build_model(self) -> None:
         inputs = keras.Input(shape=self.input_shape)
@@ -51,9 +57,16 @@ class GenreCNNClassifierV2(BaseClassifier):
 
         self.class_weights = class_weights
         
-        loss = FocalLoss(gamma=self.focal_gamma,
-                        label_smoothing=self.label_smoothing) if use_focal_loss else \
-               keras.losses.CategoricalCrossentropy(label_smoothing=self.label_smoothing)
+        if self.use_adaptive_loss:
+            loss = create_gtzan_adaptive_loss(label_smoothing=self.label_smoothing)
+            print("Using Adaptive Focal Loss with per-class gamma and confusion penalties")
+        elif use_focal_loss:
+            loss = FocalLoss(gamma=self.focal_gamma,
+                            label_smoothing=self.label_smoothing)
+            print(f"Using Standard Focal Loss (gamma={self.focal_gamma})")
+        else:
+            loss = keras.losses.CategoricalCrossentropy(label_smoothing=self.label_smoothing)
+            print("Using Categorical Cross-Entropy")
 
         self.model.compile(
             optimizer=TrainingConfig.get_optimizer(learning_rate),
