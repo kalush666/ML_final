@@ -24,13 +24,13 @@ class GTZANConfig:
     
     training_epochs: int = 100
     batch_size: int = 24
-    initial_learning_rate: float = 0.00015
+    initial_learning_rate: float = 0.0003
     segments_per_track: int = 5
     
-    dropout_rate: float = 0.65
-    l2_regularization: float = 0.001
-    focal_loss_gamma: float = 3.0
-    label_smoothing_factor: float = 0.15
+    dropout_rate: float = 0.5
+    l2_regularization: float = 0.0001
+    focal_loss_gamma: float = 2.0
+    label_smoothing_factor: float = 0.1
     
     enable_mixup_augmentation: bool = True
     enable_specaugment: bool = True

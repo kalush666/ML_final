@@ -131,7 +131,7 @@ class GTZANDatasetLoader:
         
     def _print_class_distribution(self, class_counts: Counter):
         print("\nClass distribution (training):")
-        for class_index, genre_name in enumerate(GENRE_LABELS):
+        for class_index, genre_name in enumerate(self.config.genre_names):
             sample_count = class_counts.get(class_index, 0)
             weight_value = self.computed_class_weights.get(class_index, 1.0)
             print(f"  {genre_name}: {sample_count} samples, weight={weight_value:.2f}")
