@@ -28,7 +28,8 @@
       "Bash(powershell.exe -Command \"& { Set-Location ''d:\\\\Projects\\\\ml_final''; Remove-Item -Force test_pytorch_gpu.py,install_pytorch.bat,setup_wsl2.bat,setup_wsl2_part2.sh,update_csv_paths.sh,INSTALL_WSL2.md,RUN_TRAINING.md -ErrorAction SilentlyContinue; Remove-Item -Recurse -Force ''src/utils/gpu_config.py'' -ErrorAction SilentlyContinue; echo ''Removed files'' }\")",
       "Bash(powershell.exe -Command \"& { Set-Location ''d:\\\\Projects\\\\ml_final''; Remove-Item -Recurse -Force ''venv_wsl'',''cuda-keyring_1.1-1_all.deb'',''2.18.0'',''4.14.1'' -ErrorAction SilentlyContinue; echo ''Cleaned up WSL2 files'' }\")",
       "Bash(powershell.exe -Command \"& { Set-Location ''d:\\\\Projects\\\\ml_final''; & ''.venv311\\\\Scripts\\\\pip.exe'' uninstall -y torch torchvision }\")",
-      "Bash(powershell.exe -Command \"& { Set-Location ''d:\\\\Projects\\\\ml_final''; & ''.venv311\\\\Scripts\\\\pip.exe'' install tensorflow-cpu }\")"
+      "Bash(powershell.exe -Command \"& { Set-Location ''d:\\\\Projects\\\\ml_final''; & ''.venv311\\\\Scripts\\\\pip.exe'' install tensorflow-cpu }\")",
+      "Bash(powershell.exe -Command \"& { Get-ChildItem -Path ''d:\\\\Projects\\\\ml_final\\\\models\\\\gtzan_classifier_v3'' -Recurse | Select-Object -ExpandProperty FullName }\")"
     ]
   }
 }
