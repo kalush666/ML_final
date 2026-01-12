@@ -16,28 +16,28 @@ def main():
         train_csv_path=Path('data/processed/gtzan_splits/train_fixed.csv'),
         validation_csv_path=Path('data/processed/gtzan_splits/val_fixed.csv'),
         test_csv_path=Path('data/processed/gtzan_splits/test_fixed.csv'),
-        model_output_directory=Path('models/gtzan_classifier_v5'),
+        model_output_directory=Path('models/gtzan_classifier_v6'),
 
-        training_epochs=120,
-        batch_size=16,
-        initial_learning_rate=0.0001,
+        training_epochs=150,
+        batch_size=20,
+        initial_learning_rate=0.00013,
         segments_per_track=5,
 
-        dropout_rate=0.60,
-        l2_regularization=0.0003,
+        dropout_rate=0.56,
+        l2_regularization=0.00022,
 
-        focal_loss_gamma=2.0,
-        label_smoothing_factor=0.12,
+        focal_loss_gamma=2.5,
+        label_smoothing_factor=0.09,
 
         enable_mixup_augmentation=True,
-        mixup_alpha=0.4,
+        mixup_alpha=0.35,
         use_adaptive_focal_loss=True,
-        confidence_penalty=0.25,
-        per_class_gamma=[2.0, 2.0, 2.5, 3.5, 2.5, 2.0, 2.5, 6.0, 2.5, 6.0],
+        confidence_penalty=0.20,
+        per_class_gamma=[2.0, 2.0, 3.0, 4.0, 2.5, 2.0, 2.5, 5.5, 2.5, 8.0],
 
         enable_specaugment=True,
-        freq_mask_param=15,
-        time_mask_param=40
+        freq_mask_param=12,
+        time_mask_param=35
     )
 
     if not config.validate_paths():
@@ -46,7 +46,7 @@ def main():
         sys.exit(1)
 
     print(f"\n{'='*60}")
-    print("GTZAN V5 Training - Enhanced Pop/Rock Discrimination")
+    print("GTZAN V6 Training - Balanced Regularization")
     print(f"{'='*60}")
     
     print(f"\nSystem Configuration:")
