@@ -7,16 +7,16 @@ from .evaluator import GTZANModelEvaluator
 
 
 class GTZANTrainingOrchestrator:
-    
-    def __init__(self, config: GTZANConfig = None, include_rhythm_features: bool = True):
+
+    def __init__(self, config: GTZANConfig = None, include_rhythm_features: bool = True, pretrained_model_path: Path = None):
         self.config = config or GTZANConfig()
         self.config.model_output_directory.mkdir(parents=True, exist_ok=True)
-        
+
         self.dataset_loader = GTZANDatasetLoader(
-            self.config, 
+            self.config,
             include_rhythm_features=include_rhythm_features
         )
-        self.model_trainer = GTZANModelTrainer(self.config)
+        self.model_trainer = GTZANModelTrainer(self.config, pretrained_model_path)
         self.model_evaluator = GTZANModelEvaluator(self.config)
         
     def execute_full_pipeline(self):

@@ -63,7 +63,16 @@ def main():
     print(f"  Label smoothing: {config.label_smoothing_factor}")
     print(f"  Confidence penalty: {config.confidence_penalty}")
 
-    orchestrator = GTZANTrainingOrchestrator(config, include_rhythm_features=True)
+    pretrained_v4_path = Path('models/gtzan_classifier_v4/gtzan_classifier_final.keras')
+    if pretrained_v4_path.exists():
+        print(f"\nTransfer Learning:")
+        print(f"  Loading weights from V4 (best model: 76% accuracy)")
+        pretrained_model = pretrained_v4_path
+    else:
+        pretrained_model = None
+        print(f"\nStarting from random initialization")
+
+    orchestrator = GTZANTrainingOrchestrator(config, include_rhythm_features=True, pretrained_model_path=pretrained_model)
     orchestrator.execute_full_pipeline()
 
 
