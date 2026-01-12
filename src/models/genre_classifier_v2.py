@@ -75,13 +75,14 @@ class GenreCNNClassifierV2(BaseClassifier):
         )
 
     def train(self, train_data, val_data, epochs: int = 50,
-              batch_size: int = 32, use_mixup: bool = True) -> Dict:
+              batch_size: int = 32, use_mixup: bool = True,
+              checkpoint_path: str = 'models/checkpoints/genre_best_v2.keras') -> Dict:
         if self.model is None:
             raise ValueError("Model not built yet")
 
         X_train, y_train = train_data
         X_val, y_val = val_data
-        callbacks = TrainingConfig.create_callbacks(self.model, X_train, batch_size, epochs)
+        callbacks = TrainingConfig.create_callbacks(self.model, X_train, batch_size, epochs, checkpoint_path)
         
         if use_mixup:
             mixup_gen = MixupGenerator(X_train, y_train, batch_size)

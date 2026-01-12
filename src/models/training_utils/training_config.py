@@ -6,7 +6,7 @@ from .custom_callbacks import LearningRateFormatter, F1EarlyStopping
 
 class TrainingConfig:
     @staticmethod
-    def create_callbacks(model, X_train, batch_size: int, epochs: int):
+    def create_callbacks(model, X_train, batch_size: int, epochs: int, checkpoint_path: str = 'models/checkpoints/genre_best_v2.keras'):
         initial_lr = float(tf.keras.backend.get_value(model.optimizer.learning_rate))
         cosine_decay = keras.optimizers.schedules.CosineDecay(
             initial_learning_rate=initial_lr,
@@ -26,7 +26,7 @@ class TrainingConfig:
             keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.5,
                                              patience=5, min_lr=1e-6, verbose=1),
             keras.callbacks.LearningRateScheduler(lr_schedule, verbose=0),
-            keras.callbacks.ModelCheckpoint('models/checkpoints/genre_best_v2.keras',
+            keras.callbacks.ModelCheckpoint(checkpoint_path,
                                            monitor='val_f1_score', mode='max',
                                            save_best_only=True, verbose=1),
             LearningRateFormatter()

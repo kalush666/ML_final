@@ -52,20 +52,23 @@ class GTZANModelTrainer:
         print("\nModel Summary:")
         print(self.classifier_model.get_model_summary())
         
-    def execute_training(self, training_features, training_labels, 
+    def execute_training(self, training_features, training_labels,
                          validation_features, validation_labels):
         print(f"\nStarting training for {self.config.training_epochs} epochs...")
         print(f"  Batch size: {self.config.batch_size}")
         print(f"  Using mixup: {self.config.enable_mixup_augmentation}")
-        
+
+        checkpoint_path = str(self.config.model_output_directory / 'checkpoint_best.keras')
+
         training_history = self.classifier_model.train(
             train_data=(training_features, training_labels),
             val_data=(validation_features, validation_labels),
             epochs=self.config.training_epochs,
             batch_size=self.config.batch_size,
-            use_mixup=self.config.enable_mixup_augmentation
+            use_mixup=self.config.enable_mixup_augmentation,
+            checkpoint_path=checkpoint_path
         )
-        
+
         return training_history
     
     def save_trained_model(self):
