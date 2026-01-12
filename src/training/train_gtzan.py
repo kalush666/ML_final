@@ -63,8 +63,14 @@ def main():
     print(f"  Label smoothing: {config.label_smoothing_factor}")
     print(f"  Confidence penalty: {config.confidence_penalty}")
 
+    checkpoint_path = Path('models/checkpoints/genre_best_v2.keras')
     pretrained_v4_path = Path('models/gtzan_classifier_v4/gtzan_classifier_final.keras')
-    if pretrained_v4_path.exists():
+
+    if checkpoint_path.exists():
+        print(f"\nResuming Training:")
+        print(f"  Loading checkpoint from previous run")
+        pretrained_model = checkpoint_path
+    elif pretrained_v4_path.exists():
         print(f"\nTransfer Learning:")
         print(f"  Loading weights from V4 (best model: 76% accuracy)")
         pretrained_model = pretrained_v4_path
