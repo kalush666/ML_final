@@ -16,24 +16,24 @@ def main():
         train_csv_path=Path('data/processed/gtzan_splits/train_fixed.csv'),
         validation_csv_path=Path('data/processed/gtzan_splits/val_fixed.csv'),
         test_csv_path=Path('data/processed/gtzan_splits/test_fixed.csv'),
-        model_output_directory=Path('models/gtzan_classifier_v6'),
+        model_output_directory=Path('models/gtzan_classifier_v8'),
 
         training_epochs=150,
         batch_size=20,
-        initial_learning_rate=0.00013,
+        initial_learning_rate=0.00012,
         segments_per_track=5,
 
-        dropout_rate=0.56,
-        l2_regularization=0.00022,
+        dropout_rate=0.55,
+        l2_regularization=0.00025,
 
         focal_loss_gamma=2.5,
-        label_smoothing_factor=0.09,
+        label_smoothing_factor=0.1,
 
         enable_mixup_augmentation=True,
-        mixup_alpha=0.35,
+        mixup_alpha=0.4,
         use_adaptive_focal_loss=True,
-        confidence_penalty=0.20,
-        per_class_gamma=[2.0, 2.0, 3.0, 4.0, 2.5, 2.0, 2.5, 5.5, 2.5, 8.0],
+        confidence_penalty=0.15,
+        per_class_gamma=[2.0, 2.0, 2.5, 3.5, 2.5, 2.0, 2.5, 3.5, 2.5, 4.0],
 
         enable_specaugment=True,
         freq_mask_param=12,
@@ -46,7 +46,7 @@ def main():
         sys.exit(1)
 
     print(f"\n{'='*60}")
-    print("GTZAN V6 Training - Balanced Regularization")
+    print("GTZAN V8 Training - Enhanced Rock Features")
     print(f"{'='*60}")
     
     print(f"\nSystem Configuration:")
@@ -63,20 +63,16 @@ def main():
     print(f"  Label smoothing: {config.label_smoothing_factor}")
     print(f"  Confidence penalty: {config.confidence_penalty}")
 
-    v6_checkpoint_path = config.model_output_directory / 'checkpoint_best.keras'
-    pretrained_v4_path = Path('models/gtzan_classifier_v4/gtzan_classifier_final.keras')
+    v8_checkpoint_path = config.model_output_directory / 'checkpoint_best.keras'
 
-    if v6_checkpoint_path.exists():
+    if v8_checkpoint_path.exists():
         print(f"\nResuming Training:")
-        print(f"  Loading V6 checkpoint from previous run")
-        pretrained_model = v6_checkpoint_path
-    elif pretrained_v4_path.exists():
-        print(f"\nTransfer Learning:")
-        print(f"  Loading weights from V4 (best model: 76% accuracy)")
-        pretrained_model = pretrained_v4_path
+        print(f"  Loading V8 checkpoint from previous run")
+        pretrained_model = v8_checkpoint_path
     else:
         pretrained_model = None
-        print(f"\nStarting from random initialization")
+        print(f"\nTraining from scratch with enhanced rock features")
+        print(f"  New features: spectral rolloff, spectral flux, tempo variance")
 
     orchestrator = GTZANTrainingOrchestrator(config, include_rhythm_features=True, pretrained_model_path=pretrained_model)
     orchestrator.execute_full_pipeline()

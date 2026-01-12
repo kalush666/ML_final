@@ -178,42 +178,79 @@ class AudioFeatureExtractor:
         )
         return chroma.T
     
+    def extract_rock_discriminative_features(self, audio: np.ndarray) -> np.ndarray:
+        spectral_rolloff = librosa.feature.spectral_rolloff(y=audio, sr=self.sample_rate)[0]
+        spectral_flux = librosa.onset.onset_strength(y=audio, sr=self.sample_rate)
+
+        onset_env = librosa.onset.onset_strength(y=audio, sr=self.sample_rate)
+        tempo, _ = librosa.beat.beat_track(y=audio, sr=self.sample_rate, onset_envelope=onset_env)
+
+        hop_length = 512
+        n_frames = len(spectral_flux)
+
+        window_size = int(4.0 * self.sample_rate / hop_length)
+        if window_size >= n_frames:
+            window_size = max(1, n_frames // 4)
+
+        tempo_variance = np.zeros(n_frames)
+        for i in range(n_frames):
+            start = max(0, i - window_size // 2)
+            end = min(n_frames, i + window_size // 2)
+            window = onset_env[start:end]
+            if len(window) > 1:
+                tempo_variance[i] = np.std(window)
+
+        return np.stack([
+            spectral_rolloff / (np.max(spectral_rolloff) + 1e-8),
+            spectral_flux / (np.max(spectral_flux) + 1e-8),
+            tempo_variance / (np.max(tempo_variance) + 1e-8)
+        ], axis=1)
+
     def extract_rhythm_features(self, audio: np.ndarray) -> np.ndarray:
         onset_env = librosa.onset.onset_strength(y=audio, sr=self.sample_rate)
-        
+
         tempo, beat_frames = librosa.beat.beat_track(
             y=audio, sr=self.sample_rate, onset_envelope=onset_env
         )
-        
+
         spectral_flux = librosa.onset.onset_strength(
             y=audio, sr=self.sample_rate, aggregate=np.median
         )
-        
+
         rms = librosa.feature.rms(y=audio)[0]
         zcr = librosa.feature.zero_crossing_rate(y=audio)[0]
-        
+
         contrast = librosa.feature.spectral_contrast(y=audio, sr=self.sample_rate)
         contrast_mean = np.mean(contrast, axis=0)
-        
+
         target_len = len(onset_env)
-        
+
         def resample_feature(feat, target_len):
             if len(feat) == target_len:
                 return feat
             indices = np.linspace(0, len(feat) - 1, target_len).astype(int)
             return feat[indices]
-        
+
         rms_resampled = resample_feature(rms, target_len)
         zcr_resampled = resample_feature(zcr, target_len)
         contrast_resampled = resample_feature(contrast_mean, target_len)
-        
-        rhythm_features = np.stack([
-            onset_env / (np.max(onset_env) + 1e-8),
-            rms_resampled / (np.max(rms_resampled) + 1e-8),
-            zcr_resampled / (np.max(zcr_resampled) + 1e-8),
-            contrast_resampled / (np.max(np.abs(contrast_resampled)) + 1e-8)
-        ], axis=1)
-        
+
+        rock_features = self.extract_rock_discriminative_features(audio)
+        if rock_features.shape[0] != target_len:
+            rock_features = resample_feature(rock_features.T, target_len).T
+            if rock_features.ndim == 1:
+                rock_features = rock_features.reshape(-1, 1)
+
+        rhythm_features = np.hstack([
+            np.stack([
+                onset_env / (np.max(onset_env) + 1e-8),
+                rms_resampled / (np.max(rms_resampled) + 1e-8),
+                zcr_resampled / (np.max(zcr_resampled) + 1e-8),
+                contrast_resampled / (np.max(np.abs(contrast_resampled)) + 1e-8)
+            ], axis=1),
+            rock_features
+        ])
+
         return rhythm_features
 
     def extract_all_features(self, audio: np.ndarray) -> Dict[str, np.ndarray]:

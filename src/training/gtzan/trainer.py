@@ -34,7 +34,23 @@ class GTZANModelTrainer:
         if self.pretrained_model_path and self.pretrained_model_path.exists():
             print(f"\nLoading pretrained weights from: {self.pretrained_model_path}")
             try:
-                self.classifier_model.load_weights(self.pretrained_model_path)
+                from tensorflow import keras
+                from models.layers.custom_layers import SpecAugment, DropPath
+                from models.training_utils.losses import FocalLoss, AdaptiveFocalLoss
+
+                custom_objects = {
+                    'SpecAugment': SpecAugment,
+                    'FocalLoss': FocalLoss,
+                    'AdaptiveFocalLoss': AdaptiveFocalLoss,
+                    'DropPath': DropPath
+                }
+
+                pretrained_model = keras.models.load_model(
+                    self.pretrained_model_path,
+                    custom_objects=custom_objects,
+                    compile=False
+                )
+                self.classifier_model.model.set_weights(pretrained_model.get_weights())
                 print("  Successfully loaded pretrained weights")
             except Exception as e:
                 print(f"  Warning: Could not load pretrained weights: {e}")
