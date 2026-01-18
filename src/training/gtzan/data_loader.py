@@ -9,17 +9,20 @@ from .config import GTZANConfig
 
 
 class GTZANDatasetLoader:
-    
-    def __init__(self, config: GTZANConfig, include_rhythm_features: bool = True):
+
+    def __init__(self, config: GTZANConfig, include_rhythm_features: bool = True,
+                 include_rock_features: bool = False):
         self.config = config
         self.include_rhythm_features = include_rhythm_features
+        self.include_rock_features = include_rock_features
         self.audio_feature_extractor = AudioFeatureExtractor(
-            include_rhythm=include_rhythm_features
+            include_rhythm=include_rhythm_features,
+            include_rock_features=include_rock_features
         )
         self.genre_to_index_mapping = {
             genre: idx for idx, genre in enumerate(config.genre_names)
         }
-        
+
         self.training_features = None
         self.training_labels = None
         self.validation_features = None
@@ -27,9 +30,11 @@ class GTZANDatasetLoader:
         self.test_features = None
         self.test_labels = None
         self.computed_class_weights = None
-        
-        if include_rhythm_features:
-            print("  Feature extraction: Including rhythm features (164 dims)")
+
+        if include_rhythm_features and include_rock_features:
+            print("  Feature extraction: Rhythm + rock features (167 dims)")
+        elif include_rhythm_features:
+            print("  Feature extraction: Rhythm features only (164 dims)")
         else:
             print("  Feature extraction: Standard features only (160 dims)")
         

@@ -32,7 +32,10 @@
       "Bash(powershell.exe -Command \"& { Get-ChildItem -Path ''d:\\\\Projects\\\\ml_final\\\\models\\\\gtzan_classifier_v3'' -Recurse | Select-Object -ExpandProperty FullName }\")",
       "Bash(powershell.exe:*)",
       "Bash(..venv311Scriptspython.exe test_weight_loading.py)",
-      "Bash(./.venv311/Scripts/python.exe:*)"
+      "Bash(./.venv311/Scripts/python.exe:*)",
+      "Bash(cmd /c \"C:\\\\Users\\\\jonat\\\\miniconda3\\\\envs\\\\ml_final\\\\python.exe analyze_rock_failures.py 2>&1 || echo ERROR_OCCURRED\")",
+      "Bash(powershell -Command \"& ''C:\\\\Users\\\\jonat\\\\miniconda3\\\\envs\\\\ml_final\\\\python.exe'' ''analyze_rock_failures.py''\")",
+      "Bash(powershell -Command:*)"
     ]
   }
 }

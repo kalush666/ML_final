@@ -49,6 +49,7 @@ class AudioFeatureExtractor:
                  n_mels: int = 128,
                  n_chroma: int = 12,
                  include_rhythm: bool = True,
+                 include_rock_features: bool = False,
                  load_timeout: int = 60):
         self.sample_rate = sample_rate
         self.duration = duration
@@ -56,6 +57,7 @@ class AudioFeatureExtractor:
         self.n_mels = n_mels
         self.n_chroma = n_chroma
         self.include_rhythm = include_rhythm
+        self.include_rock_features = include_rock_features
         self.load_timeout = load_timeout
 
     def _load_audio_impl(self, file_path: Path, offset: float = 0.0) -> np.ndarray:
@@ -235,23 +237,22 @@ class AudioFeatureExtractor:
         zcr_resampled = resample_feature(zcr, target_len)
         contrast_resampled = resample_feature(contrast_mean, target_len)
 
-        rock_features = self.extract_rock_discriminative_features(audio)
-        if rock_features.shape[0] != target_len:
-            rock_features = resample_feature(rock_features.T, target_len).T
-            if rock_features.ndim == 1:
-                rock_features = rock_features.reshape(-1, 1)
+        base_rhythm = np.stack([
+            onset_env / (np.max(onset_env) + 1e-8),
+            rms_resampled / (np.max(rms_resampled) + 1e-8),
+            zcr_resampled / (np.max(zcr_resampled) + 1e-8),
+            contrast_resampled / (np.max(np.abs(contrast_resampled)) + 1e-8)
+        ], axis=1)
 
-        rhythm_features = np.hstack([
-            np.stack([
-                onset_env / (np.max(onset_env) + 1e-8),
-                rms_resampled / (np.max(rms_resampled) + 1e-8),
-                zcr_resampled / (np.max(zcr_resampled) + 1e-8),
-                contrast_resampled / (np.max(np.abs(contrast_resampled)) + 1e-8)
-            ], axis=1),
-            rock_features
-        ])
+        if self.include_rock_features:
+            rock_features = self.extract_rock_discriminative_features(audio)
+            if rock_features.shape[0] != target_len:
+                rock_features = resample_feature(rock_features.T, target_len).T
+                if rock_features.ndim == 1:
+                    rock_features = rock_features.reshape(-1, 1)
+            return np.hstack([base_rhythm, rock_features])
 
-        return rhythm_features
+        return base_rhythm
 
     def extract_all_features(self, audio: np.ndarray) -> Dict[str, np.ndarray]:
         return {
